@@ -1,0 +1,13 @@
+{
+    "name": "shulha/framework",
+    "description": "Sample FW",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "shulha",
+            "email": "shulhad@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {}
+}

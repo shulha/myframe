@@ -8,6 +8,11 @@
             "email": "shulhad@gmail.com"
         }
     ],
+    "autoload": {
+        "psr-4": {
+            "Shulha\\Framework\\": "src/"
+        }
+    },
     "minimum-stability": "dev",
     "require": {}
 }

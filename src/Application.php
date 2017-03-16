@@ -2,6 +2,7 @@
 
 namespace Shulha\Framework;
 
+use Shulha\Framework\Controller\Controller;
 use Shulha\Framework\Exception\ActionNotFoundException;
 use Shulha\Framework\Exception\ConfigRoutesNotFoundException;
 use Shulha\Framework\Exception\ControllerNotFoundException;
@@ -36,6 +37,8 @@ class Application
     public function run()
     {
         try {
+            Controller::setMainLayout($this->config['main_layout']);
+
             if (empty($this->config['routes']))
                 throw new ConfigRoutesNotFoundException("Config With Routes Not Found");
             $router = new Router($this->config['routes']);

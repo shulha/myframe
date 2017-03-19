@@ -2,10 +2,11 @@
 
 namespace Shulha\Framework;
 
-use Shulha\Framework\Controller\Controller;
 use Shulha\Framework\Exception\ActionNotFoundException;
 use Shulha\Framework\Exception\ConfigRoutesNotFoundException;
+use Shulha\Framework\Exception\ConfigViewPathNotFoundException;
 use Shulha\Framework\Exception\ControllerNotFoundException;
+use Shulha\Framework\Renderer\RendererBlade;
 use Shulha\Framework\Request\Request;
 use Shulha\Framework\Response\Response;
 use Shulha\Framework\Router\Router;
@@ -29,6 +30,7 @@ class Application
     public function __construct($config = [])
     {
         $this->config = $config;
+        require '../vendor/autoload.php';
     }
 
     /**
@@ -37,7 +39,9 @@ class Application
     public function run()
     {
         try {
-            Controller::setMainLayout($this->config['main_layout']);
+            if (empty($this->config['path_to_views']))
+                throw new ConfigViewPathNotFoundException("Config With Path to Views Not Found");
+            RendererBlade::$path_to_views = $this->config['path_to_views'];
 
             if (empty($this->config['routes']))
                 throw new ConfigRoutesNotFoundException("Config With Routes Not Found");

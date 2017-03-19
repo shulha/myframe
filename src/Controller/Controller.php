@@ -2,7 +2,7 @@
 
 namespace Shulha\Framework\Controller;
 
-use Shulha\Framework\Renderer\Renderer;
+use Shulha\Framework\Renderer\RendererBlade;
 use Shulha\Framework\Response\Response;
 
 /**
@@ -12,36 +12,14 @@ use Shulha\Framework\Response\Response;
 class Controller
 {
     /**
-     * path to layout
-     * @var $main_layout
-     */
-    protected static $main_layout;
-
-    /**
-     * @param mixed $main_layout
-     */
-    public static function setMainLayout($main_layout = '')
-    {
-        self::$main_layout = $main_layout;
-    }
-
-    /**
-     * @param string $view_path
+     * @param string $view_name
      * @param array $params
-     * @param bool $with_layout
      * @return Response
      */
-    public function render(string $view_path, array $params = [], bool $with_layout = true): Response
+    public function render(string $view_name, array $params = []): Response
     {
-        $content = Renderer::render($view_path, $params);
-
-        if ($with_layout) {
-            if (!self::$main_layout) {
-                self::$main_layout = pathinfo($view_path)['dirname'] . DIRECTORY_SEPARATOR . 'layout.html.php';
-            }
-            $content = Renderer::render(self::$main_layout, ['content' => $content]);
-        }
-
+        $content = RendererBlade::render($view_name, $params);
         return new Response($content);
     }
+
 }

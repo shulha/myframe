@@ -21,6 +21,7 @@ class Response
         '200' => 'Ok',
         '301' => 'Moved permanently',
         '302' => 'Moved temporary',
+        '400' => 'Bad Request',
         '401' => 'Auth required',
         '403' => 'Access denied',
         '404' => 'Not found',

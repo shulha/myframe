@@ -94,4 +94,14 @@ class Request
         return key_exists($var, $_REQUEST) ? $_REQUEST[$var] : $default;
     }
 
+    public function __get($name)
+    {
+        return isset($_REQUEST[$name]) ? $_REQUEST[$name] : null;
+    }
+
+    public function __isset($name)
+    {
+        return isset($_REQUEST[$name]);
+    }
+
 }

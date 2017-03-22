@@ -18,8 +18,7 @@ class Controller
      */
     public function render(string $view_name, array $params = []): Response
     {
-        $content = RendererBlade::render($view_name, $params);
-        return new Response($content);
+        return new Response(RendererBlade::render($view_name, $params));
     }
 
 }

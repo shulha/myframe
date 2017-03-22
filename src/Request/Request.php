@@ -91,6 +91,9 @@ class Request
      */
     public function getRequestVariable($var, $default = null)
     {
+        if ($arr = json_decode(file_get_contents("php://input"), true))
+            return !empty($arr[$var]) ? $arr[$var] : $default;
+
         return key_exists($var, $_REQUEST) ? $_REQUEST[$var] : $default;
     }
 

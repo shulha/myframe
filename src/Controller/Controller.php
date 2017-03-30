@@ -3,22 +3,23 @@
 namespace Shulha\Framework\Controller;
 
 use Shulha\Framework\Renderer\RendererBlade;
-use Shulha\Framework\Response\Response;
 
 /**
  * Class Controller
  * @package Shulha\Framework\Controller
  */
-class Controller
+abstract class Controller
 {
     /**
+     * Render view
+     *
      * @param string $view_name
      * @param array $params
-     * @return Response
+     * @return string
      */
-    public function render(string $view_name, array $params = []): Response
+    public function render(string $view_name, array $params = []): string
     {
-        return new Response(RendererBlade::render($view_name, $params));
+        return RendererBlade::render($view_name, $params);
     }
 
 }

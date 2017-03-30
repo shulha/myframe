@@ -97,6 +97,16 @@ class Request
         return key_exists($var, $_REQUEST) ? $_REQUEST[$var] : $default;
     }
 
+    /**
+     * Returns true if received Ajax-request and assumed to response back json
+     *
+     * @return bool
+     */
+    public function wantsJson(): bool
+    {
+        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+    }
+
     public function __get($name)
     {
         return isset($_REQUEST[$name]) ? $_REQUEST[$name] : null;

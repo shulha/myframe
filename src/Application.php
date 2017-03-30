@@ -55,8 +55,17 @@ class Application
                 $rc = new \ReflectionClass($route_controller);
                 if ($rc->hasMethod($route_method)) {
                     $rm = $rc->getMethod($route_method);
+                    $rp = $rm->getParameters();
+                    $method_params = [];
+                    foreach ($rp as $param) {
+                        if (key_exists($param->getName(), $route->getParams()))
+                            $method_params[$param->getName()] = $route->getParams()[$param->getName()];
+                        if (!empty($param->getClass()) and $param->getClass()->getName() == 'Shulha\Framework\Request\Request')
+                            $method_params[$param->getName()] = Request::getInstance();
+                    }
+                    $result = ($method_params) ? $method_params : $route->getParams();
                     $controller = $rc->newInstance();
-                    $response = $rm->invokeArgs($controller, $route->getParams());
+                    $response = $rm->invokeArgs($controller, $result);
 
                     if ($response instanceof Response) {
                         $response->send();

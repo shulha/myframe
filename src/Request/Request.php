@@ -6,7 +6,7 @@ namespace Shulha\Framework\Request;
  * Class Request
  * @package Shulha\Framework\Request
  */
-class Request
+class Request implements RequestInterface
 {
     /**
      * Request instance
@@ -21,10 +21,20 @@ class Request
     protected $headers = [];
 
     /**
+     * Variables of request
+     * @var array
+     */
+    protected $requestVariables = [];
+
+    /**
      * Extract headers
      */
     private function __construct()
     {
+        $this->requestVariables += $_REQUEST;
+        if ($json = json_decode(file_get_contents("php://input"), true))
+            $this->requestVariables += $json;
+
         if (function_exists('getallheaders'))
             $this->headers = getallheaders();
         foreach ($_SERVER as $name => $value) {
@@ -91,10 +101,7 @@ class Request
      */
     public function getRequestVariable($var, $default = null)
     {
-        if ($arr = json_decode(file_get_contents("php://input"), true))
-            return !empty($arr[$var]) ? $arr[$var] : $default;
-
-        return key_exists($var, $_REQUEST) ? $_REQUEST[$var] : $default;
+        return key_exists($var, $this->requestVariables) ? $this->requestVariables[$var] : $default;
     }
 
 }

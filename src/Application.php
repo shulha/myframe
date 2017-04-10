@@ -2,6 +2,8 @@
 
 namespace Shulha\Framework;
 
+use Shulha\Framework\DI\Injector;
+use Shulha\Framework\DI\Service;
 use Shulha\Framework\Exception\ActionNotFoundException;
 use Shulha\Framework\Exception\ConfigRoutesNotFoundException;
 use Shulha\Framework\Exception\ConfigViewPathNotFoundException;
@@ -11,6 +13,7 @@ use Shulha\Framework\Request\Request;
 use Shulha\Framework\Response\Response;
 use Shulha\Framework\Router\Route;
 use Shulha\Framework\Router\Router;
+use Auryn;
 
 /**
  * Class Application
@@ -19,13 +22,9 @@ use Shulha\Framework\Router\Router;
 class Application
 {
     /**
-     * Interface contracts map
-     * @var array
+     * @var Auryn\Injector
      */
-    private $contracts = [
-        'Shulha\\Framework\\Request\\RequestInterface' => ['className' => 'Shulha\Framework\Request\Request', 'is_singleton' => true],
-    ];
-
+    private $injector;
 
     /**
      * Application config
@@ -44,9 +43,11 @@ class Application
      */
     public function __construct($config = [])
     {
-        require '../vendor/autoload.php';
+        require __DIR__ . "/../vendor/autoload.php";
         $this->config = $config;
-        $this->request = Request::getInstance();
+        Injector::setConfig($this->config);
+        $this->injector = new Auryn\Injector;
+        $this->request = $this->injector->make(Injector::getInterface('Request'));
     }
 
     /**
@@ -59,13 +60,15 @@ class Application
                 throw new ConfigViewPathNotFoundException("Config With Path to Views Not Found");
             RendererBlade::$path_to_views = $this->config['path_to_views'];
 
-            if (empty($this->config['routes']))
+            if (empty($this->config['router']['config']))
                 throw new ConfigRoutesNotFoundException("Config With Routes Not Found");
-            $router = new Router($this->config['routes']);
+
+            $this->injector->define(Injector::getInterface('Router'), [':config_route' => $this->config['router']['config']]);
+            $router = $this->injector->make(Injector::getInterface('Router'));
 
             $route = $router->getRoute($this->request);
             if ($route) {
-                $response = $this->processRoute($route);
+                $response = $this->useAuryn($route);
             }
         } catch (\Exception $e) {
             die($e->getMessage());
@@ -92,9 +95,9 @@ class Application
             if ($rc->hasMethod($route_method)) {
                 $rm = $rc->getMethod($route_method);
                 $rp = $rm->getParameters();
-                $result = $this->resolve($route, $rp);
-                $controller = $rc->newInstance();
-                return $rm->invokeArgs($controller, $result);
+                $params = Injector::resolveParams($rp, $route->getParams());
+                $controller = Injector::make($route_controller);
+                return $rm->invokeArgs($controller, $params);
             } else {
                 throw new ActionNotFoundException("Controller \"$route_controller\" has not \"$route_method\" Action");
             }
@@ -104,34 +107,36 @@ class Application
     }
 
     /**
+     * Process route using Auryn
+     *
      * @param Route $route
-     * @param $reflectionParameters
-     * @return array
-     * @throws \Exception
+     * @return mixed
+     * @throws ActionNotFoundException
+     * @throws ControllerNotFoundException
      */
-    protected function resolve(Route $route, $reflectionParameters): array
+    protected function useAuryn(Route $route)
     {
-        $method_params = [];
-        foreach ($reflectionParameters as $param) {
-            if (key_exists($param->getName(), $route->getParams()))
-                $method_params[$param->getName()] = $route->getParams()[$param->getName()];
-            if (!empty($param->getClass())) {
-                if (interface_exists($param->getClass()->getName())) {
-                    $key = $param->getClass()->getName();
-                    if (key_exists($key, $this->contracts)) {
-                        if ($this->contracts[$key]['is_singleton'])
-                            $method_params[$param->getName()] = $this->contracts[$key]['className']::getInstance();
-                        else
-                            $method_params[$param->getName()] = new $this->contracts[$key]['className']();
-                            } else {
-                        throw new \Exception("$key not found in contracts");
-                    }
-                } else {
-                    throw new \Exception("Interface does not exists");
-                }
+        $route_controller = $route->getController();
+        $route_method = $route->getMethod();
+        $params = [];
+
+        if (class_exists($route_controller)) {
+
+            foreach($route->getParams() as $k => $v){
+                $n = ":" . $k;
+                $params[$n] = $v;
             }
+            $controller = $this->injector->make($route_controller);
+            $callableController = array($controller, $route_method);
+
+            if (!is_callable($callableController)) {
+                throw new ActionNotFoundException("Controller \"$route_controller\" has not \"$route_method\" Action");
+            } else {
+                return $this->injector->execute($callableController, $args = $params);
+            }
+        } else {
+            throw new ControllerNotFoundException("Controller \"$route_controller\" not found");
         }
-        return ($method_params) ? $method_params : $route->getParams();
     }
 
     /**

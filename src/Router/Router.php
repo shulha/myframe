@@ -24,11 +24,19 @@ class Router
     private $routes = [];
 
     /**
+     * @var Request instance
+     */
+    private $request;
+
+    /**
      * Router constructor.
      * @param array $config_route
+     * @param Request $request
      */
-    public function __construct(array $config_route)
+    public function __construct(array $config_route, Request $request)
     {
+        $this->request = $request;
+
         foreach ($config_route as $key => $value) {
             $existed_variables = $this->getExistedVariables($value);
             $this->routes[$key] = [
@@ -44,14 +52,14 @@ class Router
 
     /**
      * Get route object
-     * @param Request $request
      * @return Route
      * @throws RouteNotFoundException
+     * @internal param Request $request
      */
-    public function getRoute(Request $request): Route
+    public function getRoute(): Route
     {
-        $method = $request->getMethod();
-        $uri = $request->getUri();
+        $method = $this->request->getMethod();
+        $uri = $this->request->getUri();
 
         foreach ($this->routes as $name => $value) {
             if (($value['method'] == $method) and (preg_match('/' . $value['regexp'] . '/', $uri, $matches))) {

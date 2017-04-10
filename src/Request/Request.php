@@ -6,14 +6,8 @@ namespace Shulha\Framework\Request;
  * Class Request
  * @package Shulha\Framework\Request
  */
-class Request implements RequestInterface
+class Request
 {
-    /**
-     * Request instance
-     * @var null
-     */
-    private static $instance = null;
-
     /**
      * Request headers
      * @var array
@@ -29,7 +23,7 @@ class Request implements RequestInterface
     /**
      * Extract headers
      */
-    private function __construct()
+    public function __construct()
     {
         $this->requestVariables += $_REQUEST;
         if ($json = json_decode(file_get_contents("php://input"), true))
@@ -41,25 +35,6 @@ class Request implements RequestInterface
             if (substr($name, 0, 5) == 'HTTP_')
                 $this->headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
         }
-    }
-
-    /**
-     * Request clone.
-     */
-    private function __clone()
-    {
-    }
-
-    /**
-     * Get Instance
-     * @return Request
-     */
-    public static function getInstance(): self
-    {
-        if (!self::$instance) {
-            self::$instance = new self();
-        }
-        return self::$instance;
     }
 
     /**

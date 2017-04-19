@@ -14,5 +14,8 @@
         }
     },
     "minimum-stability": "dev",
-    "require": {}
+    "require": {
+        "illuminate/view": "^5.4",
+        "rdlowrey/auryn": "^1.4"
+    }
 }

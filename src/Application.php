@@ -10,7 +10,9 @@ use Shulha\Framework\Exception\ConfigViewPathNotFoundException;
 use Shulha\Framework\Exception\ControllerNotFoundException;
 use Shulha\Framework\Renderer\RendererBlade;
 use Shulha\Framework\Request\Request;
+use Shulha\Framework\Response\JsonResponse;
 use Shulha\Framework\Response\Response;
+use Shulha\Framework\Router\Exception\RouteNotFoundException;
 use Shulha\Framework\Router\Route;
 use Shulha\Framework\Router\Router;
 use Auryn;
@@ -48,6 +50,7 @@ class Application
         Injector::setConfig($this->config);
         $this->injector = new Auryn\Injector;
         $this->request = $this->injector->make(Injector::getInterface('Request'));
+        RendererBlade::$path_to_views[] = dirname(__FILE__) . '/Views';
     }
 
     /**
@@ -58,7 +61,7 @@ class Application
         try {
             if (empty($this->config['path_to_views']))
                 throw new ConfigViewPathNotFoundException("Config With Path to Views Not Found");
-            RendererBlade::$path_to_views = $this->config['path_to_views'];
+            RendererBlade::$path_to_views[] = $this->config['path_to_views'];
 
             if (empty($this->config['router']['config']))
                 throw new ConfigRoutesNotFoundException("Config With Routes Not Found");
@@ -70,12 +73,13 @@ class Application
             if ($route) {
                 $response = $this->useAuryn($route);
             }
+        } catch (RouteNotFoundException $e) {
+            $response = $this->setError($e->getMessage(), 404);
         } catch (\Exception $e) {
-            die($e->getMessage());
+            $response = $this->setError($e->getMessage(), 500);
         }
-        if ($response instanceof Response) {
-            $response->send();
-        }
+
+        $this->prepareResponse($response)->send();
     }
 
     /**
@@ -122,7 +126,7 @@ class Application
 
         if (class_exists($route_controller)) {
 
-            foreach($route->getParams() as $k => $v){
+            foreach ($route->getParams() as $k => $v) {
                 $n = ":" . $k;
                 $params[$n] = $v;
             }
@@ -136,6 +140,42 @@ class Application
             }
         } else {
             throw new ControllerNotFoundException("Controller \"$route_controller\" not found");
+        }
+    }
+
+    /**
+     * Prepare content to be processed like response
+     *
+     * @param   $content
+     * @return  Response
+     */
+    protected function prepareResponse($content):Response
+    {
+        if($content instanceof Response){
+            return $content;
+        }
+
+        if($this->request->wantsJson() || is_array($content) || is_object($content)){
+            $response = new JsonResponse($content);
+        } else {
+            $response = new Response($content);
+        }
+
+        return $response;
+    }
+
+    /**
+     * Create system error response
+     *
+     * @param $message
+     * @return mixed
+     */
+    public function setError($message, $code = 500)
+    {
+        if($this->request->wantsJson()){
+            return compact('code', 'message');
+        } else {
+            return RendererBlade::render('error.'.$code, compact('message'));
         }
     }
 

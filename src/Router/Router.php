@@ -45,7 +45,8 @@ class Router
                 "method" => isset($value["method"]) ? $value["method"] : "GET",
                 "controller_name" => $this->getControllerName($value),
                 "controller_method" => $this->getControllerMethod($value),
-                "variables" => $existed_variables
+                "variables" => $existed_variables,
+                "middlewares" => $value["middlewares"] ?? [],
             ];
         }
     }
@@ -64,7 +65,7 @@ class Router
         foreach ($this->routes as $name => $value) {
             if (($value['method'] == $method) and (preg_match('/' . $value['regexp'] . '/', $uri, $matches))) {
                 $params = array_combine($value['variables'], array_slice($matches, 1));
-                return new Route($name, $value['controller_name'], $value['controller_method'], $params);
+                return new Route($name, $value['controller_name'], $value['controller_method'], $params, $value["middlewares"]);
             }
         }
         throw new RouteNotFoundException("Route not found!");

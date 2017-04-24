@@ -29,18 +29,25 @@ class Route
     private $params = [];
 
     /**
+     * @var array
+     */
+    private $middlewares;
+
+    /**
      * Route constructor.
      * @param string $name
      * @param string $controller
      * @param string $method
      * @param array $params
+     * @param array $middlewares
      */
-    public function __construct($name, $controller, $method, array $params = [])
+    public function __construct($name, $controller, $method, array $params = [], array $middlewares)
     {
         $this->name = $name;
         $this->controller = $controller;
         $this->method = $method;
         $this->params = $params;
+        $this->middlewares = $middlewares;
     }
 
     /**
@@ -107,5 +114,20 @@ class Route
         $this->params = $params;
     }
 
+    /**
+     * @return array
+     */
+    public function getRouteMiddlewares(): array
+    {
+        return $this->middlewares;
+    }
+
+    /**
+     * @param array $middlewares
+     */
+    public function setRouteMiddlewares(array $middlewares)
+    {
+        $this->middlewares = $middlewares;
+    }
 
 }

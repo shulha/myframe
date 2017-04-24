@@ -8,6 +8,7 @@ use Shulha\Framework\Exception\ActionNotFoundException;
 use Shulha\Framework\Exception\ConfigRoutesNotFoundException;
 use Shulha\Framework\Exception\ConfigViewPathNotFoundException;
 use Shulha\Framework\Exception\ControllerNotFoundException;
+use Shulha\Framework\Middleware\Middleware;
 use Shulha\Framework\Renderer\RendererBlade;
 use Shulha\Framework\Request\Request;
 use Shulha\Framework\Response\JsonResponse;
@@ -70,8 +71,19 @@ class Application
             $router = $this->injector->make(Injector::getInterface('Router'));
 
             $route = $router->getRoute($this->request);
+            $route_middlewares = $route->getRouteMiddlewares();
+
+            if (!empty($this->config['middlewaresMap'])) {
+                $middleware = $this->injector->make('Shulha\Framework\Middleware\Middleware',
+                                                    [':middlewaresMap' => $this->config['middlewaresMap'], ':route_middlewares' => $route_middlewares]);
+//                $middleware = new Middleware($this->request,$this->config['middlewaresMap'], $route_middlewares);
+            }
+
             if ($route) {
                 $response = $this->useAuryn($route);
+            }
+            if(!empty($route_middlewares)){
+                $response = $middleware->filtering($response);
             }
         } catch (RouteNotFoundException $e) {
             $response = $this->setError($e->getMessage(), 404);

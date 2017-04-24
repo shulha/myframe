@@ -2,6 +2,8 @@
 
 namespace Shulha\Framework;
 
+include_once ('helpers.php');
+
 use Shulha\Framework\DI\Injector;
 use Shulha\Framework\DI\Service;
 use Shulha\Framework\Exception\ActionNotFoundException;

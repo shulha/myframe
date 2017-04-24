@@ -70,7 +70,7 @@ class RendererBlade extends Renderer
     {
         ob_start();
 
-        echo self::getInstance()->make($view_name, $params);
+        echo self::getInstance()->make($view_name, $params)->render();
 
         return ob_get_clean();
     }

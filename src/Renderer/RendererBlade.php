@@ -25,7 +25,7 @@ class RendererBlade extends Renderer
      */
     private static $instance = null;
 
-    public static $path_to_views;
+    public static $path_to_views = [];
 
     protected $path_to_cache;
 
@@ -34,7 +34,7 @@ class RendererBlade extends Renderer
      */
     private function __construct()
     {
-        $this->path_to_cache = self::$path_to_views . '/_cache';
+        $this->path_to_cache = (isset(self::$path_to_views[1])) ? (self::$path_to_views[1] . '/_cache') : (self::$path_to_views[0] . '/_cache');
         if (!is_dir($this->path_to_cache)) {
             if (!mkdir($this->path_to_cache)) {
                 die('Не удалось создать директории...');
@@ -85,7 +85,7 @@ class RendererBlade extends Renderer
 
         $filesystem = new FileSystem();
 
-        $finder = new FileViewFinder($filesystem, array(self::$path_to_views));
+        $finder = new FileViewFinder($filesystem, self::$path_to_views);
 
         $engine = new CompilerEngine(
             new BladeCompiler($filesystem, $this->path_to_cache)

@@ -16,7 +16,6 @@ use Shulha\Framework\Response\JsonResponse;
 use Shulha\Framework\Response\Response;
 use Shulha\Framework\Router\Exception\RouteNotFoundException;
 use Shulha\Framework\Router\Route;
-use Shulha\Framework\Router\Router;
 use Auryn;
 
 /**
@@ -51,6 +50,7 @@ class Application
         $this->config = $config;
         Injector::setConfig($this->config);
         $this->injector = new Auryn\Injector;
+        Service::set('injector', $this->injector);
         $this->request = $this->injector->make(Injector::getInterface('Request'));
         RendererBlade::$path_to_views[] = dirname(__FILE__) . '/Views';
     }
@@ -65,11 +65,22 @@ class Application
                 throw new ConfigViewPathNotFoundException("Config With Path to Views Not Found");
             RendererBlade::$path_to_views[] = $this->config['path_to_views'];
 
-            if (empty($this->config['router']['config']))
+            if (empty($this->config['router']))
                 throw new ConfigRoutesNotFoundException("Config With Routes Not Found");
 
-            $this->injector->define(Injector::getInterface('Router'), [':config_route' => $this->config['router']['config']]);
+            $this->injector->define(Injector::getInterface('Router'), [':config' => $this->config['router']['config']]);
             $router = $this->injector->make(Injector::getInterface('Router'));
+
+            if (empty($this->config['db'])){
+                throw new \Exception('No DB connection params predefined');
+            }
+            $this->injector->alias('Shulha\Framework\Database\DBOContract', Injector::getInterface('Shulha\Framework\Database\DBOContract'));
+            $this->injector->share('PDO');
+            $this->injector->define('PDO', [
+                ':dsn' => $this->config['db']['driver'].':dbname='.$this->config['db']['dbname'].';host='.$this->config['db']['host'],
+                ':username' => $this->config['db']['user'],
+                ':passwd' => $this->config['db']['passwd']
+            ]);
 
             $route = $router->getRoute($this->request);
             if ($route) {

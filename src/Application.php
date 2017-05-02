@@ -4,6 +4,7 @@ namespace Shulha\Framework;
 
 include_once ('helpers.php');
 
+use Pixie\Connection;
 use Shulha\Framework\DI\Injector;
 use Shulha\Framework\DI\Service;
 use Shulha\Framework\Exception\ActionNotFoundException;
@@ -74,13 +75,7 @@ class Application
             if (empty($this->config['db'])){
                 throw new \Exception('No DB connection params predefined');
             }
-            $this->injector->alias('Shulha\Framework\Database\DBOContract', Injector::getInterface('Shulha\Framework\Database\DBOContract'));
-            $this->injector->share('PDO');
-            $this->injector->define('PDO', [
-                ':dsn' => $this->config['db']['driver'].':dbname='.$this->config['db']['dbname'].';host='.$this->config['db']['host'],
-                ':username' => $this->config['db']['user'],
-                ':passwd' => $this->config['db']['passwd']
-            ]);
+            new Connection($this->config['db']['driver'], $this->config['db'], 'QB');
 
             $route = $router->getRoute($this->request);
             if ($route) {

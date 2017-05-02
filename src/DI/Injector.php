@@ -117,7 +117,7 @@ class Injector
                         if(array_key_exists($name, $actual_params)) {
                             $params[$name] =  $actual_params[$name];
                         } else {
-                            if($param->isDefaultValueAvailable) {
+                            if($param->isDefaultValueAvailable()) {
                                 $param->getDefaultValue();
                             } else {
                                 throw new \Exception(sprintf('Unable to find value param [%s]', $name));
@@ -129,7 +129,7 @@ class Injector
                     if(array_key_exists($name, $actual_params)) {
                         $params[$name] =  $actual_params[$name];
                     } else {
-                        if($param->isDefaultValueAvailable) {
+                        if($param->isDefaultValueAvailable()) {
                             $param->getDefaultValue();
                         } else {
                             throw new \Exception(sprintf('Unable to find value param [%s]', $name));

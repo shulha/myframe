@@ -30,14 +30,14 @@ class Router
 
     /**
      * Router constructor.
-     * @param array $config_route
+     * @param array $config
      * @param Request $request
      */
-    public function __construct(array $config_route, Request $request)
+    public function __construct(array $config, Request $request)
     {
         $this->request = $request;
 
-        foreach ($config_route as $key => $value) {
+        foreach ($config as $key => $value) {
             $existed_variables = $this->getExistedVariables($value);
             $this->routes[$key] = [
                 "origin" => $value["pattern"],

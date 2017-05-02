@@ -2,6 +2,9 @@
 
 namespace Shulha\Framework;
 
+include_once ('helpers.php');
+
+use Pixie\Connection;
 use Shulha\Framework\DI\Injector;
 use Shulha\Framework\DI\Service;
 use Shulha\Framework\Exception\ActionNotFoundException;
@@ -15,7 +18,6 @@ use Shulha\Framework\Response\JsonResponse;
 use Shulha\Framework\Response\Response;
 use Shulha\Framework\Router\Exception\RouteNotFoundException;
 use Shulha\Framework\Router\Route;
-use Shulha\Framework\Router\Router;
 use Auryn;
 
 /**
@@ -50,6 +52,7 @@ class Application
         $this->config = $config;
         Injector::setConfig($this->config);
         $this->injector = new Auryn\Injector;
+        Service::set('injector', $this->injector);
         $this->request = $this->injector->make(Injector::getInterface('Request'));
         RendererBlade::$path_to_views[] = dirname(__FILE__) . '/Views';
     }
@@ -64,11 +67,16 @@ class Application
                 throw new ConfigViewPathNotFoundException("Config With Path to Views Not Found");
             RendererBlade::$path_to_views[] = $this->config['path_to_views'];
 
-            if (empty($this->config['router']['config']))
+            if (empty($this->config['router']))
                 throw new ConfigRoutesNotFoundException("Config With Routes Not Found");
 
-            $this->injector->define(Injector::getInterface('Router'), [':config_route' => $this->config['router']['config']]);
+            $this->injector->define(Injector::getInterface('Router'), [':config' => $this->config['router']['config']]);
             $router = $this->injector->make(Injector::getInterface('Router'));
+
+            if (empty($this->config['db'])){
+                throw new \Exception('No DB connection params predefined');
+            }
+            new Connection($this->config['db']['driver'], $this->config['db'], 'QB');
 
             $route = $router->getRoute($this->request);
             $route_middlewares = $route->getRouteMiddlewares();

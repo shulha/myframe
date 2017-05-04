@@ -24,6 +24,11 @@ class Injector
     protected static $config = [];
 
     /**
+     * @var array   Singleton instance storages
+     */
+    protected static $instances = [];
+
+    /**
      * Set config
      *
      * @param $cfg
@@ -64,24 +69,37 @@ class Injector
             $class_name = self::$interface_mapping[$class_name];
         }
 
+        // If service is already registered in singleton cache:
+        if(isset(self::$instances[$class_name])){
+            return self::$instances[$class_name];
+        }
+
         if(class_exists($class_name)){
             try{
                 $reflection_class = new \ReflectionClass($class_name);
 
                 $reflection = $reflection_class;
-                $constructor = $reflection->getConstructor();
+
+                $constructor = self::getCreationMethod($reflection);
 
                 while(empty($constructor) && !empty($reflection)){
                     // Fallback to parent constructor
                     $reflection = $reflection->getParentClass();
-                    $constructor = $reflection ? $reflection->getConstructor() : null;
+                    $constructor = $reflection ?  self::getCreationMethod($reflection) : null;
                 }
 
                 $constructor_params = empty($constructor) ? [] : $constructor->getParameters();
                 // Mix provided params with config ones
                 $params = array_merge(self::lookupConfigParams(self::getClassSlug($class_name)), $params);
                 $paramset = self::resolveParams($constructor_params, $params);
-                $instance = $reflection_class->newInstanceArgs($paramset);
+
+                if(self::isSingletonPattern($reflection_class)){
+                    $instance = call_user_func_array([$class_name, 'getInstance'], $paramset);
+                    // Store instance in singleton cache:
+                    self::$instances[$class_name] = $instance;
+                } else {
+                    $instance = $reflection_class->newInstanceArgs($paramset);
+                }
 
                 return $instance;
             } catch(\Exception $e) {
@@ -170,5 +188,31 @@ class Injector
         }
 
         return $cfg_params;
+    }
+
+    /**
+     * Returns reflection for the nethod, responsible for creating the instance
+     *
+     * @param \ReflectionClass $class_ref
+     * @return \ReflectionMethod
+     */
+    private static function getCreationMethod(\ReflectionClass $class_ref) {
+        if(self::isSingletonPattern($class_ref)){
+            $method = $class_ref->getMethod('getInstance');
+        } else {
+            $method = $class_ref->getConstructor();
+        }
+
+        return $method;
+    }
+
+    /**
+     * Check if class seems to be a singleton pattern:
+     *
+     * @param \ReflectionClass $class_ref
+     * @return bool
+     */
+    private static function isSingletonPattern(\ReflectionClass $class_ref): bool {
+        return $class_ref->hasMethod('getInstance');
     }
 }

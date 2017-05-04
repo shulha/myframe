@@ -4,6 +4,7 @@ namespace Shulha\Framework;
 
 include_once ('helpers.php');
 
+use Auryn;
 use Pixie\Connection;
 use Shulha\Framework\DI\Injector;
 use Shulha\Framework\DI\Service;
@@ -15,10 +16,12 @@ use Shulha\Framework\Middleware\Middleware;
 use Shulha\Framework\Renderer\RendererBlade;
 use Shulha\Framework\Request\Request;
 use Shulha\Framework\Response\JsonResponse;
+use Shulha\Framework\Response\RedirectResponse;
 use Shulha\Framework\Response\Response;
 use Shulha\Framework\Router\Exception\RouteNotFoundException;
 use Shulha\Framework\Router\Route;
-use Auryn;
+use Shulha\Framework\Security\Exception\AuthRequiredException;
+use Shulha\Framework\Security\Exception\NotPermittedException;
 
 /**
  * Class Application
@@ -81,13 +84,16 @@ class Application
             $route = $router->getRoute($this->request);
             $route_middlewares = $route->getRouteMiddlewares();
 
-            if (!empty($this->config['middlewaresMap'])) {
+            if ($route_middlewares) {
+                $middlewaresMap = $this->config['middlewaresMap'] ?? [];
                 $middleware = $this->injector->make('Shulha\Framework\Middleware\Middleware',
-                                                    [':middlewaresMap' => $this->config['middlewaresMap'], ':route_middlewares' => $route_middlewares]);
-//                $middleware = new Middleware($this->request,$this->config['middlewaresMap'], $route_middlewares);
+                                                    [':middlewaresMap' => $middlewaresMap, ':route_middlewares' => $route_middlewares]);
             }
 
-            if ($route) {
+            $this->injector->alias('Shulha\Framework\Security\UserContract', Injector::getInterface('Shulha\Framework\Security\UserContract'));
+            $this->injector->make('Shulha\Framework\Security\Security');
+
+            if($route){
                 $response = $this->useAuryn($route);
             }
             if(!empty($route_middlewares)){
@@ -95,6 +101,14 @@ class Application
             }
         } catch (RouteNotFoundException $e) {
             $response = $this->setError($e->getMessage(), 404);
+        } catch (AuthRequiredException $e) {
+            if(!empty($this->config['login']))
+            {
+                // Reroute to login
+                $response = new RedirectResponse($this->config['login']);
+            } else {
+                $response = $this->setError($e->getMessage(), 401);
+            }
         } catch (\Exception $e) {
             $response = $this->setError($e->getMessage(), 500);
         }

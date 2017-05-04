@@ -15,6 +15,17 @@ class Request
     protected $headers = [];
 
     /**
+     * Array of upload files
+     * @var array
+     */
+    public $uploaded_array = [];
+
+    /**
+     * @var string
+     */
+    public $errormsg = '';
+
+    /**
      * Variables of request
      * @var array
      */
@@ -35,6 +46,56 @@ class Request
             if (substr($name, 0, 5) == 'HTTP_')
                 $this->headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
         }
+    }
+
+    /**
+     * Determine if the uploaded data contains a file.
+     *
+     * @param $file
+     * @return bool
+     */
+    public function hasFile($file)
+    {
+        if (key_exists($file, $_FILES))
+            return true;
+
+        return false;
+    }
+
+    /**
+     * Upload files from request
+     *
+     * @param null $keys
+     * @param string $root
+     * @param string $folder
+     * @return bool
+     * @throws \Exception
+     */
+    public function uploadFiles($keys = null, $folder = "/tmp/", $root = null)
+    {
+        if (!$root) $root = $_SERVER['DOCUMENT_ROOT'];
+
+        foreach ($_FILES[$keys]["error"] as $key => $error)
+        {
+            $tmp_name = $_FILES[$keys]["tmp_name"][$key];
+            if (!$tmp_name) continue;
+
+            $name = uniqid();
+
+            if ($error == UPLOAD_ERR_OK)
+            {
+                if ( move_uploaded_file($tmp_name, $root.$folder.$name) ) {
+                    $this->uploaded_array[] .= $folder.$name;
+                }
+                else
+                    $this->errormsg .= "Could not move uploaded file '".$tmp_name."' to '".$name."'<br/>\n";
+            }
+            else $this->errormsg .= "Upload error. [".$error."] on file '".$name."'<br/>\n";
+        }
+
+        if ($this->errormsg) throw new \Exception($this->errormsg);
+
+        return true;
     }
 
     /**

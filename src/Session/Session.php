@@ -11,11 +11,6 @@ namespace Shulha\Framework\Session;
 class Session
 {
     /**
-     * @var Session|null $instance Session instance
-     */
-    protected static $instance = null;
-
-    /**
      * @var string $data Session variable that keeps general information of current session
      */
     private $data = 'session';
@@ -28,7 +23,7 @@ class Session
     /**
      * Session constructor
      */
-    protected function __construct()
+    public function __construct()
     {
         session_start();
         if (!isset($_SESSION[$this->data])) {
@@ -36,26 +31,6 @@ class Session
         }
 
         $this->started = true;
-    }
-
-    /**
-     * Method to clone objects of its class.
-     */
-    private function __clone()
-    {
-    }
-
-    /**
-     * Get singleton instance
-     *
-     * @return Session
-     */
-    public static function getInstance(): self
-    {
-        if (null === self::$instance) {
-            self::$instance = new self();
-        }
-        return self::$instance;
     }
 
     /**

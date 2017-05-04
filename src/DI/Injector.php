@@ -21,7 +21,7 @@ class Injector
     /**
      * @var array   Config
      */
-    protected static $config = [];
+    public static $config = [];
 
     /**
      * @var array   Singleton instance storages

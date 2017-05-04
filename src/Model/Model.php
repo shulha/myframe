@@ -3,6 +3,7 @@
 namespace Shulha\Framework\Model;
 
 use Pixie\QueryBuilder\QueryBuilderHandler;
+use Shulha\Framework\DI\Service;
 
 /**
  * Class Model
@@ -15,14 +16,21 @@ abstract class Model
      *
      * @var string
      */
-    protected $table;
+    public $table;
 
     /**
      * QueryBuilder instance
      *
      * @var QueryBuilderHandler
      */
-    protected $qb;
+    public $qb;
+
+    public $id;
+
+    /**
+     * @var Data container
+     */
+    protected $rowData;
 
     /**
      * Model constructor.
@@ -41,10 +49,9 @@ abstract class Model
      */
     public function all(): array
     {
-        $query = $this->qb->table($this->table);
+//        return $this->qb->table($this->table)->setFetchMode(\PDO::FETCH_CLASS, get_class($this), [$this->qb])->get();
 
-        return $query->get();
-
+        return $this->qb->table($this->table)->get();
     }
 
     /**
@@ -56,7 +63,8 @@ abstract class Model
      */
     public function find($id)
     {
-        return $this->qb->table($this->table)->find($id);
+        return $this->qb->table($this->table)->setFetchMode(\PDO::FETCH_CLASS, get_class($this), [$this->qb])->find($id);
+//        return $this->qb->table($this->table)->find($id);
 
     }
 
@@ -68,10 +76,11 @@ abstract class Model
      */
     public function insert(array $columns = [], array $values = [])
     {
-
         $data = array_combine($columns, $values);
 
         $this->qb->table($this->table)->insert($data);
+
+        $this->id = $this->qb->pdo()->lastInsertId();
     }
 
     /**
@@ -98,5 +107,33 @@ abstract class Model
         $this->qb->table($this->table)->where('id', $id)->delete();
     }
 
+    /**
+     * Create new entity
+     */
+    public function create(): self
+    {
+        return Service::get('injector')->make(get_class($this));
+    }
 
+    /**
+     * @param $varname
+     * @return null
+     */
+    public function __get($varname)
+    {
+        return isset($this->rowData[$varname]) ? $this->rowData[$varname] : null;
+    }
+
+    /**
+     * @param $varname
+     */
+    public function __set($varname, $value)
+    {
+        $this->rowData[$varname] = $value;
+    }
+
+    public function save()
+    {
+        $this->insert(array_keys($this->rowData), $this->rowData);
+    }
 }

@@ -75,12 +75,6 @@ class Application
                 throw new \Exception('No DB connection params predefined');
             }
             $this->injector->alias('Shulha\Framework\Database\DBOContract', Injector::getInterface('Shulha\Framework\Database\DBOContract'));
-            $this->injector->share('PDO');
-            $this->injector->define('PDO', [
-                ':dsn' => $this->config['db']['driver'].':dbname='.$this->config['db']['dbname'].';host='.$this->config['db']['host'],
-                ':username' => $this->config['db']['user'],
-                ':passwd' => $this->config['db']['passwd']
-            ]);
 
             $route = $router->getRoute($this->request);
             if ($route) {

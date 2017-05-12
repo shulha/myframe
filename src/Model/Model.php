@@ -8,7 +8,7 @@ use Shulha\Framework\Database\DBOContract;
  * Class Model
  * @package Shulha\Framework\Model
  */
-abstract class Model extends QueryBuilder
+abstract class Model
 {
     /**
      * @var string
@@ -21,29 +21,31 @@ abstract class Model extends QueryBuilder
     protected $dbo;
 
     /**
+     * QueryBuilder instance
+     *
+     * @var QueryBuilderHandler
+     */
+    protected $queryBuilder;
+
+    /**
      * Model constructor.
      * @param DBOContract $dbo
      */
     public function __construct(DBOContract $dbo)
     {
         $this->dbo = $dbo;
+        $this->queryBuilder = $dbo->queryBuilder;
     }
 
     /**
-     * Get queried records
+     * Get all of the models from the database.
      *
      * @return array
      */
     public function all(): array
     {
-        $sql = $this->select()
-            ->from($this->table)
-            ->build();
-
-        $pdo_stat = $this->dbo->query($sql);
-
-        // Warning! calls to fetch methods should be wrapped in Adapter!
-        return $pdo_stat ? $pdo_stat->fetchAll() : [];
+        $query = $this->queryBuilder->table($this->table);
+        return $query->get();
     }
 
     /**
@@ -55,15 +57,41 @@ abstract class Model extends QueryBuilder
      */
     public function find($id)
     {
-        $sql = $this->select()
-            ->from($this->table)
-            ->where('id', (int)$id)
-            ->limit(1)
-            ->build();
+        return $this->queryBuilder->table($this->table)->find($id);
+    }
 
-        $pdo_stat = $this->dbo->query($sql);
+    /**
+     * Insert the model in the database.
+     *
+     * @param array $columns
+     * @param array $values
+     */
+    public function insert(array $columns = [], array $values = [])
+    {
+        $data = array_combine($columns, $values);
+        $this->queryBuilder->table($this->table)->insert($data);
+    }
 
-        // Warning! calls to fetch methods should be wrapped in Adapter!
-        return $pdo_stat ? $pdo_stat->fetchObject() : null;
+    /**
+     * Update the model in the database.
+     *
+     * @param int $id
+     * @param array $columns
+     * @param array $values
+     */
+    public function update(int $id, array $columns = [], array $values = [])
+    {
+        $data = array_combine($columns, $values);
+        $this->queryBuilder->table($this->table)->where('id', $id)->update($data);
+    }
+
+    /**
+     * Delete the model from the database.
+     *
+     * @param $id
+     */
+    public function delete(int $id)
+    {
+        $this->queryBuilder->table($this->table)->where('id', $id)->delete();
     }
 }

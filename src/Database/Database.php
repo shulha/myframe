@@ -2,7 +2,7 @@
 
 namespace Shulha\Framework\Database;
 
-use PDO;
+use Shulha\Framework\DI\Injector;
 use Shulha\Framework\DI\Service;
 
 /**
@@ -12,16 +12,21 @@ use Shulha\Framework\DI\Service;
 class Database implements DBOContract
 {
     /**
-     * @var PDO
+     * @var
      */
     protected $connection;
 
     /**
-     * The default fetch mode of the connection.
+     * DB config
      *
-     * @var int
+     * @var
      */
-    protected $fetchMode = PDO::FETCH_OBJ;
+    protected $config;
+
+    /**
+     * @var QueryBuilderHandler
+     */
+    public $queryBuilder;
 
     /**
      * Generic constructor.
@@ -29,32 +34,13 @@ class Database implements DBOContract
     public function __construct()
     {
         try {
-            $this->connection = Service::get('injector')->make('PDO');
-            $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->config = Injector::$config['db'];
+            $this->connection = Service::get('injector')->make('Pixie\Connection',
+                [':adapter' => $this->config['driver'], ':adapterConfig' => $this->config]);
+            $this->queryBuilder = Service::get('injector')->make('Pixie\QueryBuilder\QueryBuilderHandler');
         } catch (\PDOException $e) {
             throw $e;
         }
     }
 
-    /**
-     * Magic call
-     *
-     * @param $method
-     * @param $args
-     * @return mixed
-     */
-    public function __call($method, $args)
-    {
-        return call_user_func_array([$this->connection, $method], $args);
-    }
-
-    /**
-     * Query method
-     * @param $statement
-     * @return \PDOStatement
-     */
-    public function query($statement)
-    {
-        return $this->connection->query($statement, $this->fetchMode);
-    }
 }

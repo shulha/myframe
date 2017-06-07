@@ -161,4 +161,22 @@ class Session
             $this->__set('flashMsgs', $flashMsgs);
         }
     }
+
+    /**
+     * Add error list from validation to $_SESSION['errorList'] array
+     *
+     * @param $value
+     * @throws SessionException
+     */
+    public function flashErrorList($value)
+    {
+        if (!is_array($value)) {
+            $parameterType = gettype($value);
+            throw new SessionException(
+                "Second parameter for Session::flashErrorList method must be 'array', '$parameterType' is given"
+            );
+        } else {
+            $this->__set('errorList', $value);
+        }
+    }
 }

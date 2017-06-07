@@ -14,12 +14,12 @@ if (!function_exists('debug')) {
     function debug($obj)
     {
         echo '<pre>';
-            print_r($obj);
+        print_r($obj);
         echo '</pre>';
     }
 }
 
-if(!function_exists('view')){
+if (!function_exists('view')) {
     /**
      * Render view
      *
@@ -32,7 +32,7 @@ if(!function_exists('view')){
     function view($view_name, $data = [])
     {
         $request = Service::get('Request');
-        if($request->wantsJson()){
+        if ($request->wantsJson()) {
             // No need to render, just return raw data
             return empty($data) ? true : $data;
         }
@@ -43,7 +43,7 @@ if(!function_exists('view')){
     }
 }
 
-if(!function_exists('route')){
+if (!function_exists('route')) {
     /**
      * Build route
      *
@@ -59,7 +59,7 @@ if(!function_exists('route')){
     }
 }
 
-if(!function_exists('checkAuth')){
+if (!function_exists('checkAuth')) {
     /**
      * Check current authorization status
      *
@@ -71,7 +71,7 @@ if(!function_exists('checkAuth')){
     }
 }
 
-if(!function_exists('getUser')){
+if (!function_exists('getUser')) {
     /**
      * Get current user object
      *
@@ -83,7 +83,7 @@ if(!function_exists('getUser')){
     }
 }
 
-if(!function_exists('url_slug')){
+if (!function_exists('url_slug')) {
     /**
      * Create a web friendly URL slug from a string.
      *
@@ -99,7 +99,8 @@ if(!function_exists('url_slug')){
      * @param array $options
      * @return string
      */
-     function url_slug($str, $options = array()) {
+    function url_slug($str, $options = array())
+    {
         // Make sure string is in UTF-8 and strip invalid UTF-8 characters
         $str = mb_convert_encoding((string)$str, 'UTF-8', mb_list_encodings());
 
@@ -194,5 +195,33 @@ if(!function_exists('url_slug')){
         $str = trim($str, $options['delimiter']);
 
         return $options['lowercase'] ? mb_strtolower($str, 'UTF-8') : $str;
+    }
+}
+
+if (!function_exists('getErrorList')) {
+
+    /**
+     * Get $_SESSION['errorList'] array
+     *
+     * @return mixed
+     */
+    function getErrorList()
+    {
+        $session = Service::get('injector')->make('Shulha\Framework\Session\Session');
+
+        return $session->errorList;
+    }
+}
+
+if (!function_exists('resetErrorList')) {
+
+    /**
+     * Remove $_SESSION['errorList'] array
+     */
+    function resetErrorList()
+    {
+        $session = Service::get('injector')->make('Shulha\Framework\Session\Session');
+
+        $session->remove('errorList');
     }
 }

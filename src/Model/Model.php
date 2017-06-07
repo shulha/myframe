@@ -118,6 +118,22 @@ abstract class Model
     }
 
     /**
+     * @return null|\stdClass
+     */
+    public function latest()
+    {
+        return $this->qb->table($this->table)->orderBy('created_at', 'DESC')->first();
+    }
+
+    /**
+     * Save model with row data
+     */
+    public function save()
+    {
+        $this->insert(array_keys($this->rowData), $this->rowData);
+    }
+
+    /**
      * Create new entity
      */
     public function create(): self
@@ -142,8 +158,4 @@ abstract class Model
         $this->rowData[$varname] = $value;
     }
 
-    public function save()
-    {
-        $this->insert(array_keys($this->rowData), $this->rowData);
-    }
 }

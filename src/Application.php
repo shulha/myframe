@@ -48,7 +48,7 @@ class Application
      */
     public function __construct($config = [])
     {
-        require __DIR__ . "/../vendor/autoload.php";
+        require "../vendor/autoload.php";
         $this->config = $config;
         Injector::setConfig($this->config);
         $this->injector = new Auryn\Injector;

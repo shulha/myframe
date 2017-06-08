@@ -83,6 +83,19 @@ if (!function_exists('getUser')) {
     }
 }
 
+if (!function_exists('hasAccess')) {
+    /**
+     * Check current user has Access
+     *
+     * @param $role
+     * @return bool
+     */
+    function hasAccess($role)
+    {
+        return Security::hasAccess($role);
+    }
+}
+
 if (!function_exists('url_slug')) {
     /**
      * Create a web friendly URL slug from a string.

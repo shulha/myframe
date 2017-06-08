@@ -87,12 +87,19 @@ if (!function_exists('hasAccess')) {
     /**
      * Check current user has Access
      *
-     * @param $role
+     * @param $name
      * @return bool
+     * @internal param $role
      */
-    function hasAccess($role)
+    function hasAccess($name)
     {
-        return Security::hasAccess($role);
+        $session = Service::get('injector')->make('Shulha\Framework\Session\Session');
+
+        if (is_array($session->role) and in_array($name, $session->role)) {
+            return true;
+        }
+
+        return false;
     }
 }
 

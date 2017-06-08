@@ -69,22 +69,6 @@ class Security
     }
 
     /**
-     * check user access
-     *
-     * @param $name
-     * @return bool
-     */
-    public function hasAccess(string $name): bool
-    {
-        if (is_array($this->session->role) and in_array($name, $this->session->role)) {
-            return true;
-        }
-
-        return false;
-
-    }
-
-    /**
      * Authorize user
      * @param UserContract $user
      */

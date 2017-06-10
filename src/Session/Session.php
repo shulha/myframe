@@ -28,9 +28,19 @@ class Session
         session_start();
         if (!isset($_SESSION[$this->data])) {
             $this->init();
+            $this->genToken();
         }
 
         $this->started = true;
+    }
+
+    /**
+     * Token generation
+     *
+     * @return string
+     */
+    public function genToken() {
+        $_SESSION['token'] = hash_hmac('sha256', microtime(), uniqid().rand(10,1000));
     }
 
     /**

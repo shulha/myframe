@@ -103,6 +103,20 @@ if (!function_exists('hasAccess')) {
     }
 }
 
+if (!function_exists('csrf_token')) {
+    /**
+     * Get token from session
+     *
+     * @return string
+     */
+    function csrf_token()
+    {
+        $session = Service::get('injector')->make('Shulha\Framework\Session\Session');
+
+        return $session->token;
+    }
+}
+
 if (!function_exists('url_slug')) {
     /**
      * Create a web friendly URL slug from a string.

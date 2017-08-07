@@ -69,6 +69,7 @@ class Router
                 return new Route(
                     $name, $value['controller_name'], $value['controller_method'], $params, $value["middlewares"], $value['roles']
                 );
+
             }
         }
         throw new RouteNotFoundException("Route not found!");

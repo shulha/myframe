@@ -2,6 +2,7 @@
 
 namespace Shulha\Framework\Middleware\Filters;
 
+
 use Shulha\Framework\DI\Service;
 use Shulha\Framework\Middleware\Exception\NotPermittedException;
 use Shulha\Framework\Middleware\MiddlewareInterface;

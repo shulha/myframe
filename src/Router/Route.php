@@ -45,6 +45,7 @@ class Route
      * @param string $method
      * @param array $params
      * @param array $middlewares
+
      * @param array $roles
      */
     public function __construct($name, $controller, $method, array $params = [], array $middlewares, array $roles = [])

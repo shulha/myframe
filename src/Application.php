@@ -12,6 +12,7 @@ use Shulha\Framework\Exception\ActionNotFoundException;
 use Shulha\Framework\Exception\ConfigRoutesNotFoundException;
 use Shulha\Framework\Exception\ConfigViewPathNotFoundException;
 use Shulha\Framework\Exception\ControllerNotFoundException;
+use Shulha\Framework\Middleware\Middleware;
 use Shulha\Framework\Renderer\RendererBlade;
 use Shulha\Framework\Request\Request;
 use Shulha\Framework\Response\JsonResponse;

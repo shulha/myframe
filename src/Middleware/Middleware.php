@@ -16,7 +16,7 @@ class Middleware
      * @var array
      */
     private $middlewaresMap = [
-        'check_role' => 'Shulha\Framework\Middleware\Filters\IsAdminMiddleware',
+        'check_role' => 'Shulha\Framework\Middleware\Filters\CheckRoleMiddleware',
         'check_token' => 'Shulha\Framework\Middleware\Filters\CheckTokenMiddleware'
     ];
     /**

@@ -4,6 +4,8 @@ namespace Shulha\Framework;
 
 include_once ('helpers.php');
 
+use Auryn;
+use Shulha\Framework\Controller\Exception\AuthRequiredException;
 use Shulha\Framework\DI\Injector;
 use Shulha\Framework\DI\Service;
 use Shulha\Framework\Exception\ActionNotFoundException;
@@ -14,10 +16,10 @@ use Shulha\Framework\Middleware\Middleware;
 use Shulha\Framework\Renderer\RendererBlade;
 use Shulha\Framework\Request\Request;
 use Shulha\Framework\Response\JsonResponse;
+use Shulha\Framework\Response\RedirectResponse;
 use Shulha\Framework\Response\Response;
 use Shulha\Framework\Router\Exception\RouteNotFoundException;
 use Shulha\Framework\Router\Route;
-use Auryn;
 
 /**
  * Class Application
@@ -47,7 +49,8 @@ class Application
      */
     public function __construct($config = [])
     {
-        require __DIR__ . "/../vendor/autoload.php";
+//        require __DIR__ . "/../vendor/autoload.php";
+        require "../vendor/autoload.php";
         $this->config = $config;
         Injector::setConfig($this->config);
         $this->injector = new Auryn\Injector;
@@ -80,13 +83,16 @@ class Application
             $route = $router->getRoute($this->request);
             $route_middlewares = $route->getRouteMiddlewares();
 
-            if (!empty($this->config['middlewaresMap'])) {
+            if ($route_middlewares) {
+                $middlewaresMap = $this->config['middlewaresMap'] ?? [];
                 $middleware = $this->injector->make('Shulha\Framework\Middleware\Middleware',
-                                                    [':middlewaresMap' => $this->config['middlewaresMap'], ':route_middlewares' => $route_middlewares]);
-//                $middleware = new Middleware($this->request,$this->config['middlewaresMap'], $route_middlewares);
+                                                    [':middlewaresMap' => $middlewaresMap, ':route_middlewares' => $route_middlewares]);
             }
 
-            if ($route) {
+            $this->injector->alias('Shulha\Framework\Security\UserContract', Injector::getInterface('Shulha\Framework\Security\UserContract'));
+            $this->injector->make('Shulha\Framework\Security\Security');
+
+            if($route){
                 $response = $this->useAuryn($route);
             }
             if(!empty($route_middlewares)){
@@ -94,6 +100,14 @@ class Application
             }
         } catch (RouteNotFoundException $e) {
             $response = $this->setError($e->getMessage(), 404);
+        } catch (AuthRequiredException $e) {
+            if(!empty($this->config['login']))
+            {
+                // Reroute to login
+                $response = new RedirectResponse($this->config['login']);
+            } else {
+                $response = $this->setError($e->getMessage(), 401);
+            }
         } catch (\Exception $e) {
             $response = $this->setError($e->getMessage(), 500);
         }

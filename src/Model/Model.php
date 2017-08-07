@@ -2,7 +2,9 @@
 
 namespace Shulha\Framework\Model;
 
+use Pixie\QueryBuilder\QueryBuilderHandler;
 use Shulha\Framework\Database\DBOContract;
+use Shulha\Framework\DI\Service;
 
 /**
  * Class Model
@@ -11,21 +13,35 @@ use Shulha\Framework\Database\DBOContract;
 abstract class Model
 {
     /**
+     * The table associated with the model.
+     *
      * @var string
      */
-    protected $table = '';
+    public $table;
 
     /**
-     * @var DBOContract
+     * Last Inserted Id
+     *
+     * @var
      */
-    protected $dbo;
+    public $id;
 
     /**
      * QueryBuilder instance
      *
      * @var QueryBuilderHandler
      */
-    protected $queryBuilder;
+    public $qb;
+
+    /**
+     * @var DBOContract
+     */
+    public $dbo;
+
+    /**
+     * @var Data container
+     */
+    protected $rowData;
 
     /**
      * Model constructor.
@@ -34,7 +50,7 @@ abstract class Model
     public function __construct(DBOContract $dbo)
     {
         $this->dbo = $dbo;
-        $this->queryBuilder = $dbo->queryBuilder;
+        $this->qb = $dbo->queryBuilder;
     }
 
     /**
@@ -44,8 +60,8 @@ abstract class Model
      */
     public function all(): array
     {
-        $query = $this->queryBuilder->table($this->table);
-        return $query->get();
+//        return $this->qb->table($this->table)->setFetchMode(\PDO::FETCH_CLASS, get_class($this), [$this->dbo])->get();
+        return $this->qb->table($this->table)->get();
     }
 
     /**
@@ -57,7 +73,9 @@ abstract class Model
      */
     public function find($id)
     {
-        return $this->queryBuilder->table($this->table)->find($id);
+        return $this->qb->table($this->table)->setFetchMode(\PDO::FETCH_CLASS, get_class($this), [$this->dbo])->find($id);
+//        return $this->qb->table($this->table)->find($id);
+
     }
 
     /**
@@ -69,7 +87,10 @@ abstract class Model
     public function insert(array $columns = [], array $values = [])
     {
         $data = array_combine($columns, $values);
-        $this->queryBuilder->table($this->table)->insert($data);
+
+        $this->qb->table($this->table)->insert($data);
+
+        $this->id = $this->qb->pdo()->lastInsertId();
     }
 
     /**
@@ -82,7 +103,8 @@ abstract class Model
     public function update(int $id, array $columns = [], array $values = [])
     {
         $data = array_combine($columns, $values);
-        $this->queryBuilder->table($this->table)->where('id', $id)->update($data);
+
+        $this->qb->table($this->table)->where('id', $id)->update($data);
     }
 
     /**
@@ -92,6 +114,48 @@ abstract class Model
      */
     public function delete(int $id)
     {
-        $this->queryBuilder->table($this->table)->where('id', $id)->delete();
+        $this->qb->table($this->table)->where('id', $id)->delete();
     }
+
+    /**
+     * @return null|\stdClass
+     */
+    public function latest()
+    {
+        return $this->qb->table($this->table)->orderBy('created_at', 'DESC')->first();
+    }
+
+    /**
+     * Save model with row data
+     */
+    public function save()
+    {
+        $this->insert(array_keys($this->rowData), $this->rowData);
+    }
+
+    /**
+     * Create new entity
+     */
+    public function create(): self
+    {
+        return Service::get('injector')->make(get_class($this));
+    }
+
+    /**
+     * @param $varname
+     * @return null
+     */
+    public function __get($varname)
+    {
+        return isset($this->rowData[$varname]) ? $this->rowData[$varname] : null;
+    }
+
+    /**
+     * @param $varname
+     */
+    public function __set($varname, $value)
+    {
+        $this->rowData[$varname] = $value;
+    }
+
 }
